@@ -1,0 +1,25 @@
+replicaCount: 1
+
+migration:
+  image:
+    name: cos-order-service-migrations
+    tag: latest
+
+  container:
+    name: cos-order-service-migrations-run
+
+image:
+  name: cos-order-service
+  tag: latest
+
+container:
+  name: cos-order-service-test
+
+service:
+  ports:
+    port: 3002
+    containerPort: 3002
+
+ingress:
+  path: /api/order-service
+  port: 3002

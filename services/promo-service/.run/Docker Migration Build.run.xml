@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Docker Migration Build" type="docker-deploy" factoryName="dockerfile" server-name="Docker">
+    <deployment type="dockerfile">
+      <settings>
+        <option name="imageTag" value="cos-promo-service-migrations:latest cos-promo-service-migrations:0.0.1" />
+        <option name="buildOnly" value="true" />
+        <option name="showCommandPreview" value="true" />
+        <option name="sourceFilePath" value="migrations/Dockerfile" />
+      </settings>
+    </deployment>
+    <method v="2" />
+  </configuration>
+</component>

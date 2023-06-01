@@ -1,0 +1,17 @@
+replicaCount: 1
+
+image:
+  name: cos-client
+  tag: latest
+
+container:
+  name: cos-client-test
+
+service:
+  ports:
+    port: 3000
+    containerPort: 3000
+
+ingress:
+  path: /
+  port: 3000

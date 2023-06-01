@@ -1,0 +1,6 @@
+apiVersion: v2
+type: application
+version: 0.0.1
+name: order-service
+appVersion: '0.0.5'
+description: 'order-service'

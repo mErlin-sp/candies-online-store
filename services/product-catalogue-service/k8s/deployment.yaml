@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-catalogue-service-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: product-catalogue-service
+  template:
+    metadata:
+      labels:
+        app: product-catalogue-service
+    spec:
+      initContainers:
+        - name: cos-product-catalogue-service-migrations-run
+          image: cos-product-catalogue-service-migrations:latest
+          imagePullPolicy: Never
+          command: [ "db-migrate", "up", "--config", "./database.json", "--env", "prod" ]
+          envFrom:
+            - configMapRef:
+                name: db-config
+            - secretRef:
+                name: db-secret
+          env:
+            - name: DB_SERVICE_NAME
+              value: db-service
+      containers:
+        - name: cos-product-catalogue-service-test
+          image: cos-product-catalogue-service:latest
+          imagePullPolicy: Never
+          env:
+            - name: PRODUCT_CATALOGUE_SERVICE_NAME
+              value: product-catalogue-service-service
+            - name: ORDER_SERVICE_NAME
+              value: order-service-service
+            - name: PROMO_SERVICE_NAME
+              value: promo-service-service
+            - name: DB_SERVICE_NAME
+              value: db-service
+          ports:
+            - containerPort: 3001

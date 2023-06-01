@@ -1,0 +1,20 @@
+replicaCount: 1
+
+database:
+  mysqlDatabase: db
+  secret:
+    mySQLRootPassword: ZGJfcm9vdA==
+    mySQLUser: ZGJfdXNlcg==
+    mySQLPassword: ZGJfdXNlcg==
+
+image:
+  name: cos-db
+  tag: latest
+
+container:
+  name: cos-db-test
+
+service:
+  ports:
+    port: 3306
+    containerPort: 3306

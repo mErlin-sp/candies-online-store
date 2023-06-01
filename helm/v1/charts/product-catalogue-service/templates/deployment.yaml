@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-{{ .Chart.Name }}-deployment
+  labels:
+    app.kubernetes.io/managed-by: helm
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-{{ .Chart.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-{{ .Chart.Name }}
+    spec:
+      initContainers:
+        - name: {{.Values.migration.container.name}}
+          image: {{.Values.migration.image.name}}:{{ .Values.migration.image.tag }}
+          imagePullPolicy: Never
+          command: [ "db-migrate", "up", "--config", "./database.json", "--env", "prod" ]
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-database-config
+            - secretRef:
+                name: {{ .Release.Name }}-database-secret
+          env:
+            - name: DB_SERVICE_NAME
+              value: {{ .Release.Name }}-database-service
+      containers:
+        - name: {{.Values.container.name}}
+          image: {{ .Values.image.name }}:{{ .Values.image.tag }}
+          imagePullPolicy: Never
+          env:
+            - name: PRODUCT_CATALOGUE_SERVICE_NAME
+              value: {{ .Release.Name }}-product-catalogue-service-service
+            - name: ORDER_SERVICE_NAME
+              value: {{ .Release.Name }}-order-service-service
+            - name: PROMO_SERVICE_NAME
+              value: {{ .Release.Name }}-promo-service-service
+            - name: DB_SERVICE_NAME
+              value: {{ .Release.Name }}-database-service
+          ports:
+            - containerPort: {{.Values.service.ports.containerPort}}

@@ -1,0 +1,25 @@
+replicaCount: 1
+
+migration:
+  image:
+    name: cos-promo-service-migrations
+    tag: latest
+
+  container:
+    name: cos-promo-service-migrations-run
+
+image:
+  name: cos-promo-service
+  tag: latest
+
+container:
+  name: cos-promo-service-test
+
+service:
+  ports:
+    port: 3003
+    containerPort: 3003
+
+ingress:
+  path: /api/promo-service
+  port: 3003

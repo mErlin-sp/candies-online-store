@@ -1,0 +1,57 @@
+doctype html
+html
+    head
+        title= title
+        link(rel='icon' type='image/x-icon' href='/images/favicon.png')
+        link(rel='stylesheet', href='/stylesheets/style.css')
+        link(rel='stylesheet', href='/stylesheets/new-order.css')
+        link(rel='stylesheet', href='/stylesheets/product.css')
+        script(src='https://code.jquery.com/jquery-3.7.0.js',
+            integrity='sha256-JlqSTELeR4TLqP0OG9dxM7yDPqX1ox/HfgiSLBj8+kM=',
+            crossorigin='anonymous')
+    body
+        header
+            h2= title
+        section#new-order
+            form
+                .product-container
+                    .product
+                        img(src=product.img, alt=product.name)
+                        h4= product.name
+                        p= product.price + '$'
+                    input#product(type='hidden', name='orderedProduct', value= product.id)
+                .form-group
+                    label(for='name') Name:
+                    input#name(type='text', name='customerName', placeholder='Enter your name', required)
+                .form-group
+                    label(for='phone') Phone:
+                    input#phone(type='tel', name='customerPhone', placeholder='Enter your phone number', required)
+                .form-group
+                    label(for='address') Address:
+                    textarea#address(name='customerAddress', placeholder='Enter your address', required)
+                .form-group
+                    label(for='quantity') Quantity:
+                    input#quantity(type='number', name='orderedQuantity', min='1', max='10', value='1', required)
+                .form-group
+                    label(for='coupon') Coupon (optional):
+                    input#coupon(type='text', name='promoText' placeholder='Enter your coupon (optional)')
+                button.green-button(type='submit') Place Order
+                script.
+                    $('#new-order form').on("submit", function (event) {
+                        event.preventDefault()
+                        console.log($(this).serializeArray())
+                        $.post('/api/order-service/submit-order',
+                            $(this).serializeArray(),
+                            function (order) {
+                                console.log(order)
+                                alert(`Your order has been successfully placed. Order ID: ${order.orderID}`)
+                                window.location.replace('/')
+                            }).fail(function (error) {
+                            console.log(error)
+                            alert('There was error while placing your order. Maybe Order Service is down.')
+                            alert(`Error: ${error.responseText}.`)
+                            window.location.replace('/')
+                        })
+                    });
+
+

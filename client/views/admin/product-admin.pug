@@ -1,0 +1,97 @@
+doctype html
+html
+    head
+        title= title
+        link(rel='icon' type='image/x-icon' href='/images/favicon.png')
+        link(rel='stylesheet', href='/stylesheets/style.css')
+        link(rel='stylesheet', href='/stylesheets/product.css')
+        link(rel='stylesheet', href='/stylesheets/admin.css')
+        script(src='https://code.jquery.com/jquery-3.7.0.js',
+            integrity='sha256-JlqSTELeR4TLqP0OG9dxM7yDPqX1ox/HfgiSLBj8+kM=',
+            crossorigin='anonymous')
+    body
+        header
+            h2= title
+        section#actions
+            button.green-button#add-product-toggle(type='button') Add product
+            script.
+                $('#add-product-toggle').click(() => $('#add-product').fadeToggle())
+            form#add-product
+                h2 Add Product
+                .form-group
+                    label(for='product-name') Product name:
+                    input#product-name(type='text', name='productName', placeholder='Product name:', required)
+                .form-group
+                    label(for='product-image') Product image:
+                    input#product-image(type='text', name='productImg', placeholder='Product image link:', required)
+                .form-group
+                    label(for='product-price') Product price:
+                    input#product-price(type='float', name='productPrice', placeholder='Product price:', required)
+                button.green-button(type='submit') Confirm product addition
+                script.
+                    $('#add-product').on('submit', function (event) {
+                        event.preventDefault()
+                        console.log($(this).serializeArray())
+                        $.post('/api/product-catalog-service/add-product',
+                            $(this).serializeArray(),
+                            function (product) {
+                                console.log(product)
+                                alert('Product added.')
+                            }).fail(function (error) {
+                            console.log(error)
+                            alert('Product not added. Maybe Product Service is down.')
+                            alert(`Error: ${error.responseText}.`)
+                        }).always(function () {
+                            updateProducts($('.product-container'))
+                        })
+                    })
+
+        section#products
+            h2 Product LIST
+            button#update-products.green-button(type='button') Update products
+            .product-container
+                script.
+                    $(document).ready(function () {
+                        let productContainer = $('.product-container')
+
+                        $('#update-products').click(function () {
+                            updateProducts(productContainer)
+                        })
+
+                        updateProducts(productContainer)
+                    })
+
+                    function updateProducts(productContainer) {
+                        $.get('/api/product-catalog-service/products', function (products) {
+                            productContainer.empty()
+                            for (let i = 0; i < products.length; i++) {
+                                const product = products[i]
+                                productContainer.append(`
+                                        <div class="product">
+                                            <img src="${product.img}" alt="${product.name}">
+                                            <h4>${product.name}</h4>
+                                            <p>${product.price}$</p>
+                                            <button class="green-button" id="product-${product.id}-delete">Delete product</button>
+                                        </div>
+                                        `)
+                                $(`#product-${product.id}-delete`).click(function () {
+                                    if (confirm(`Delete product ${product.name} ?`)) {
+                                        $.get(`/api/product-catalog-service/delete-product/${product.id}`,
+                                            function () {
+                                                alert('Product deleted.')
+                                            }).fail(function (error) {
+                                            console.log(error)
+                                            alert('Product not deleted. Maybe Product Service is down.')
+                                            alert(`Error: ${error.responseText}.`)
+                                        }).always(function () {
+                                            updateProducts(productContainer)
+                                        })
+                                    }
+                                })
+                            }
+                        }).fail(function (error) {
+                            alert('Error loading products. Maybe Product Service is down.')
+                            alert(`Error: ${error.responseText}.`)
+                            productContainer.html('<p>Error loading products. Maybe Product Service is down.</p>')
+                        })
+                    }

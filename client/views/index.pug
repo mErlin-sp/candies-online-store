@@ -1,0 +1,38 @@
+doctype html
+html
+    head
+        title= title
+        link(rel='icon' type='image/x-icon' href='/images/favicon.png')
+        link(rel='stylesheet', href='/stylesheets/style.css')
+        link(rel='stylesheet', href='/stylesheets/product.css')
+        script(src='https://code.jquery.com/jquery-3.7.0.js',
+            integrity='sha256-JlqSTELeR4TLqP0OG9dxM7yDPqX1ox/HfgiSLBj8+kM=',
+            crossorigin='anonymous')
+        script(src='/javascripts/index.js')
+    body
+        header
+            h1= title
+
+        section#products
+            h3 Our Products:
+            .product-container
+
+        section#track-order
+            h3 Already made an order? Track it
+            form
+                input#order-id(type='number', placeholder='Your order ID:', required)
+                button(type='submit' class='green-button') Track order
+
+        section#contact
+            h3 Contact Us
+            p Have a question or need assistance? Get in touch with us:
+            p
+                strong Email:
+                a  #{email}
+            p
+                strong Phone:
+                |  #{phone}
+
+        footer
+            p &copy; 2023 #{title}. All rights reserved.
+

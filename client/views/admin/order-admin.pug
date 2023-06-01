@@ -1,0 +1,127 @@
+doctype html
+html
+    head
+        title= title
+        link(rel='icon' type='image/x-icon' href='/images/favicon.png')
+        link(rel='stylesheet', href='/stylesheets/style.css')
+        link(rel='stylesheet', href='/stylesheets/admin.css')
+        script(src='https://code.jquery.com/jquery-3.7.0.js',
+            integrity='sha256-JlqSTELeR4TLqP0OG9dxM7yDPqX1ox/HfgiSLBj8+kM=',
+            crossorigin='anonymous')
+    body
+        header
+            h2= title
+        section#actions
+            button.green-button#add-order-toggle Add order
+            script.
+                $('#add-order-toggle').click(() => $('#add-order').fadeToggle())
+            form#add-order
+                h2 Add Order
+                .form-group
+                    label(for='customer-name') Customer name:
+                    input#customer-name(type='text', name='customerName', placeholder='Customer name:', required)
+                .form-group
+                    label(for='customer-phone') Customer phone:
+                    input#customer-phone(type='text', name='customerPhone', placeholder='Customer phone:', required)
+                .form-group
+                    label(for='customer-address') Customer address:
+                    input#customer-address(type='float', name='customerAddress', placeholder='Customer address:', required)
+                .form-group
+                    label(for='product-id') Product ID:
+                    input#product-id(type='float', name='orderedProduct', placeholder='Product ID:', required)
+                .form-group
+                    label(for='product-quantity') Product quantity:
+                    input#product-quantity(type='float', name='orderedQuantity', placeholder='Product quantity:')
+                button(type='submit' class='green-button') Confirm order addition
+                script.
+                    $('#add-order').on('submit', function (event) {
+                        event.preventDefault()
+                        console.log($(this).serializeArray());
+                        $.post('/api/order-service/submit-order',
+                            $(this).serializeArray(),
+                            function (order) {
+                                console.log(order)
+                                alert('Order added.')
+                            }).fail(function (error) {
+                            console.log(error)
+                            alert('Order not added. Maybe Order Service is down.')
+                            alert(`Error: ${error.responseText}.`)
+                        }).always(function () {
+                            updateOrderTable($('.tg tbody'))
+                        })
+                    })
+        section#orders
+            h2 Order TABLE
+            button.green-button#update-orders Update orders
+            table.tg
+                tbody
+            script.
+                $(document).ready(function () {
+                    let tbody = $('.tg tbody')
+
+                    $('#update-orders').click(function () {
+                        updateOrderTable(tbody)
+                    })
+                    updateOrderTable(tbody)
+                })
+
+                function updateOrderTable(tbody) {
+                    $.get('/api/order-service/orders', function (orders) {
+                        console.log(orders)
+                        tbody.empty()
+                        tbody.append(`
+                        <tr>
+                           <td class="tg-0">Order ID</td>
+                           <td class="tg-0">Time</td>
+                           <td class="tg-0">Customer<br>Name</td>
+                           <td class="tg-0">Customer <br>Phone</td>
+                           <td class="tg-0">Customer <br>Address</td>
+                           <td class="tg-0">Product ID</td>
+                           <td class="tg-0">Product Quantity</td>
+                           <td class="tg-0">Status</td>
+                           <td class="tg-0">Edit</td>
+                        </tr>
+                        `)
+                        for (let i = 0; i < orders.length; i++) {
+                            const order = orders[i]
+                            tbody.append(`
+                                    <tr>
+                                        <td class="tg-1">${order.id}</td>
+                                        <td class="tg-1">${order.creationTime}</td>
+                                        <td class="tg-1">${order.customerName}</td>
+                                        <td class="tg-1">${order.customerPhone}</td>
+                                        <td class="tg-1">${order.customerAddress}</td>
+                                        <td class="tg-1">${order.productID}</td>
+                                        <td class="tg-1">${order.productQuantity}</td>
+                                        <td class="tg-1">${order.status}</td>
+                                        <td class="tg-1">
+                                            <button type="button" class="green-button" id="order-${order.id}-edit">Edit order</button>
+                                            <button type="button" class="yellow-button" id="order-${order.id}-close">Close order</button>
+                                            <button type="button" class="red-button" id="order-${order.id}-delete">Delete order</button>
+                                        </td>
+                                    </tr>
+                                    `)
+
+                            $(`#order-${order.id}-delete`).click(function () {
+                                if (confirm(`Delete order ${order.id} ?`)) {
+                                    $.get('/api/order-service/delete-order/' + order.id, function () {
+                                        alert('Order deleted.')
+                                    }).fail(function (error) {
+                                        console.log(error)
+                                        alert('Order not deleted. Maybe Order Service is down.')
+                                    }).always(function () {
+                                        updateOrderTable(tbody)
+                                    })
+                                }
+                            })
+                        }
+                    }).fail(function (error) {
+                        console.log(error)
+                        alert('Error loading orders. Maybe Order Service is down.')
+                        alert(`Error: ${error.responseText}.`)
+                        tbody.html('Error loading orders. Maybe Order Service is down.')
+                    })
+                }
+
+
+

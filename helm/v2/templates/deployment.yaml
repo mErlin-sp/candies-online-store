@@ -1,0 +1,256 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "v2.fullname" . }}-client-deployment
+  labels:
+  {{- include "v2.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.clientDeployment.replicas }}
+  selector:
+    matchLabels:
+      app: {{ include "v2.fullname" . }}-client
+    {{- include "v2.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "v2.fullname" . }}-client
+      {{- include "v2.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - env:
+            - name: PRODUCT_CATALOGUE_SERVICE_NAME
+              value: {{ include "v2.fullname" . }}-product-catalogue-service-service
+            - name: ORDER_SERVICE_NAME
+              value: {{ include "v2.fullname" . }}-order-service-service
+            - name: PROMO_SERVICE_NAME
+              value: {{ include "v2.fullname" . }}-promo-service-service
+            - name: DB_SERVICE_NAME
+              value: {{ include "v2.fullname" . }}-db-service
+            - name: KUBERNETES_CLUSTER_DOMAIN
+              value: {{ quote .Values.kubernetesClusterDomain }}
+          image: {{ .Values.clientDeployment.cosClientTest.image.repository }}:{{ .Values.clientDeployment.cosClientTest.image.tag
+          | default .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.clientDeployment.cosClientTest.imagePullPolicy }}
+          name: cos-client-test
+          ports:
+            - containerPort: 3000
+          resources: { }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "v2.fullname" . }}-db-deployment
+  labels:
+  {{- include "v2.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.dbDeployment.replicas }}
+  selector:
+    matchLabels:
+      app: {{ include "v2.fullname" . }}-db
+    {{- include "v2.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "v2.fullname" . }}-db
+      {{- include "v2.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - env:
+            - name: KUBERNETES_CLUSTER_DOMAIN
+              value: {{ quote .Values.kubernetesClusterDomain }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "v2.fullname" . }}-db-config
+            - secretRef:
+                name: {{ include "v2.fullname" . }}-db-secret
+          image: {{ .Values.dbDeployment.cosDbTest.image.repository }}:{{ .Values.dbDeployment.cosDbTest.image.tag
+          | default .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.dbDeployment.cosDbTest.imagePullPolicy }}
+          name: cos-db-test
+          ports:
+            - containerPort: 3306
+          resources: { }
+          volumeMounts:
+            - mountPath: /var/lib/db/data
+              name: db-storage
+      volumes:
+        - name: db-storage
+          persistentVolumeClaim:
+            claimName: {{ include "v2.fullname" . }}-db-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "v2.fullname" . }}-order-service-deployment
+  labels:
+  {{- include "v2.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.orderServiceDeployment.replicas }}
+  selector:
+    matchLabels:
+      app: {{ include "v2.fullname" . }}-order-service
+    {{- include "v2.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "v2.fullname" . }}-order-service
+      {{- include "v2.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - env:
+            - name: PRODUCT_CATALOGUE_SERVICE_NAME
+              value: {{ include "v2.fullname" . }}-product-catalogue-service-service
+            - name: ORDER_SERVICE_NAME
+              value: {{ include "v2.fullname" . }}-order-service-service
+            - name: PROMO_SERVICE_NAME
+              value: {{ include "v2.fullname" . }}-promo-service-service
+            - name: DB_SERVICE_NAME
+              value: {{ include "v2.fullname" . }}-db-service
+            - name: KUBERNETES_CLUSTER_DOMAIN
+              value: {{ quote .Values.kubernetesClusterDomain }}
+          image: {{ .Values.orderServiceDeployment.cosOrderServiceTest.image.repository }}:{{
+          .Values.orderServiceDeployment.cosOrderServiceTest.image.tag | default .Chart.AppVersion
+          }}
+          imagePullPolicy: {{ .Values.orderServiceDeployment.cosOrderServiceTest.imagePullPolicy
+          }}
+          name: cos-order-service-test
+          ports:
+            - containerPort: 3002
+          resources: { }
+      initContainers:
+        - command: [ "db-migrate", "up", "--config", "./database.json", "--env", "prod" ]
+          env:
+            - name: DB_SERVICE_NAME
+              value: {{ include "v2.fullname" . }}-db-service
+            - name: KUBERNETES_CLUSTER_DOMAIN
+              value: {{ quote .Values.kubernetesClusterDomain }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "v2.fullname" . }}-db-config
+            - secretRef:
+                name: {{ include "v2.fullname" . }}-db-secret
+          image: {{ .Values.orderServiceDeployment.cosOrderServiceMigrationsRun.image.repository
+          }}:{{ .Values.orderServiceDeployment.cosOrderServiceMigrationsRun.image.tag |
+          default .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.orderServiceDeployment.cosOrderServiceMigrationsRun.imagePullPolicy
+          }}
+          name: cos-order-service-migrations-run
+          resources: { }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "v2.fullname" . }}-product-catalogue-service-deployment
+  labels:
+  {{- include "v2.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.productCatalogueServiceDeployment.replicas }}
+  selector:
+    matchLabels:
+      app: {{ include "v2.fullname" . }}-product-catalogue-service
+    {{- include "v2.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "v2.fullname" . }}-product-catalogue-service
+      {{- include "v2.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - env:
+            - name: PRODUCT_CATALOGUE_SERVICE_NAME
+              value: {{ include "v2.fullname" . }}-product-catalogue-service-service
+            - name: ORDER_SERVICE_NAME
+              value: {{ include "v2.fullname" . }}-order-service-service
+            - name: PROMO_SERVICE_NAME
+              value: {{ include "v2.fullname" . }}-promo-service-service
+            - name: DB_SERVICE_NAME
+              value: {{ include "v2.fullname" . }}-db-service
+            - name: KUBERNETES_CLUSTER_DOMAIN
+              value: {{ quote .Values.kubernetesClusterDomain }}
+          image: {{ .Values.productCatalogueServiceDeployment.cosProductCatalogueServiceTest.image.repository
+          }}:{{ .Values.productCatalogueServiceDeployment.cosProductCatalogueServiceTest.image.tag
+          | default .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.productCatalogueServiceDeployment.cosProductCatalogueServiceTest.imagePullPolicy
+          }}
+          name: cos-product-catalogue-service-test
+          ports:
+            - containerPort: 3001
+          resources: { }
+      initContainers:
+        - command: [ "db-migrate", "up", "--config", "./database.json", "--env", "prod" ]
+          env:
+            - name: DB_SERVICE_NAME
+              value: {{ include "v2.fullname" . }}-db-service
+            - name: KUBERNETES_CLUSTER_DOMAIN
+              value: {{ quote .Values.kubernetesClusterDomain }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "v2.fullname" . }}-db-config
+            - secretRef:
+                name: {{ include "v2.fullname" . }}-db-secret
+          image: {{ .Values.productCatalogueServiceDeployment.cosProductCatalogueServiceMigrationsRun.image.repository
+          }}:{{ .Values.productCatalogueServiceDeployment.cosProductCatalogueServiceMigrationsRun.image.tag
+          | default .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.productCatalogueServiceDeployment.cosProductCatalogueServiceMigrationsRun.imagePullPolicy
+          }}
+          name: cos-product-catalogue-service-migrations-run
+          resources: { }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "v2.fullname" . }}-promo-service-deployment
+  labels:
+  {{- include "v2.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.promoServiceDeployment.replicas }}
+  selector:
+    matchLabels:
+      app: {{ include "v2.fullname" . }}-promo-service
+    {{- include "v2.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "v2.fullname" . }}-promo-service
+      {{- include "v2.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - env:
+            - name: PRODUCT_CATALOGUE_SERVICE_NAME
+              value: {{ include "v2.fullname" . }}-product-catalogue-service-service
+            - name: ORDER_SERVICE_NAME
+              value: {{ include "v2.fullname" . }}-order-service-service
+            - name: PROMO_SERVICE_NAME
+              value: {{ include "v2.fullname" . }}-promo-service-service
+            - name: DB_SERVICE_NAME
+              value: {{ include "v2.fullname" . }}-db-service
+            - name: KUBERNETES_CLUSTER_DOMAIN
+              value: {{ quote .Values.kubernetesClusterDomain }}
+          image: {{ .Values.promoServiceDeployment.cosPromoServiceTest.image.repository }}:{{
+          .Values.promoServiceDeployment.cosPromoServiceTest.image.tag | default .Chart.AppVersion
+          }}
+          imagePullPolicy: {{ .Values.promoServiceDeployment.cosPromoServiceTest.imagePullPolicy
+          }}
+          name: cos-promo-service-test
+          ports:
+            - containerPort: 3003
+          resources: { }
+      initContainers:
+        - command: [ "db-migrate", "up", "--config", "./database.json", "--env", "prod" ]
+          env:
+            - name: DB_SERVICE_NAME
+              value: {{ include "v2.fullname" . }}-db-service
+            - name: KUBERNETES_CLUSTER_DOMAIN
+              value: {{ quote .Values.kubernetesClusterDomain }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "v2.fullname" . }}-db-config
+            - secretRef:
+                name: {{ include "v2.fullname" . }}-db-secret
+          image: {{ .Values.promoServiceDeployment.cosPromoServiceMigrationsRun.image.repository
+          }}:{{ .Values.promoServiceDeployment.cosPromoServiceMigrationsRun.image.tag | default
+          .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.promoServiceDeployment.cosPromoServiceMigrationsRun.imagePullPolicy
+          }}
+          name: cos-promo-service-migrations-run
+          resources: { }

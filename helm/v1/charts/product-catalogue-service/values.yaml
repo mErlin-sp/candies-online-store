@@ -1,0 +1,25 @@
+replicaCount: 1
+
+migration:
+  image:
+    name: cos-product-catalogue-service-migrations
+    tag: latest
+
+  container:
+    name: cos-product-catalogue-service-migrations-run
+
+image:
+  name: cos-product-catalogue-service
+  tag: latest
+
+container:
+  name: cos-product-catalogue-service-test
+
+service:
+  ports:
+    port: 3001
+    containerPort: 3001
+
+ingress:
+  path: /api/product-catalog-service
+  port: 3001

@@ -1,0 +1,10 @@
+apiVersion: v2                            # версія helm API, для Helm 3 - v2, для Helm 2 - v1 (обов'язково)
+type: application                         # Тип Chart, може бути application та library (library неможливо встановити, такий чарт має використовуватись в чарті типу application) (опціонально, за замовчуванням application)
+version: 0.0.1                            # Версія чарту по формату 'SemVer 2' (обов'язково)
+name: candies-online-store                # Довільне ім'я Chart, або додатку (обов'язково)
+appVersion: '0.0.5'                       # Версія додатку, не обов'язково 'SemVer 2', бажано в лапках (опціонально)
+description: 'Candies Online Store'       # Довільний опис (опціонально)
+dependencies: # Сторонні залежності
+  - name: ingress-nginx
+    version: '*'
+    repository: https://kubernetes.github.io/ingress-nginx

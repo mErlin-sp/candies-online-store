@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-{{ .Chart.Name }}-deployment
+  labels:
+    app.kubernetes.io/managed-by: helm
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-{{ .Chart.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-{{ .Chart.Name }}
+    spec:
+      containers:
+        - name: {{.Values.container.name}}
+          image: {{ .Values.image.name }}:{{ .Values.image.tag }}
+          imagePullPolicy: Never
+          env:
+            - name: PRODUCT_CATALOGUE_SERVICE_NAME
+              value: {{ .Release.Name }}-product-catalogue-service-service
+            - name: ORDER_SERVICE_NAME
+              value: {{ .Release.Name }}-order-service-service
+            - name: PROMO_SERVICE_NAME
+              value: {{ .Release.Name }}-promo-service-service
+            - name: DB_SERVICE_NAME
+              value: {{ .Release.Name }}-database-service
+          ports:
+            - containerPort: {{.Values.service.ports.containerPort}}

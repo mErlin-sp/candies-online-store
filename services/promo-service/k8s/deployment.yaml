@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: promo-service-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: promo-service
+  template:
+    metadata:
+      labels:
+        app: promo-service
+    spec:
+      initContainers:
+        - name: cos-promo-service-migrations-run
+          image: cos-promo-service-migrations:latest
+          imagePullPolicy: Never
+          #          command: [ "migrate", "-path", "/migrations", "-database",  "$(POSTGRESQL_URL)", "goto", "$(VERSION)" ] # CLI команда запуску міграцій, де $(POSTGRESQL_URL) і $(VERSION) змінні середовища
+          command: [ "db-migrate", "up", "--config", "./database.json", "--env", "prod" ]
+          envFrom:
+            - configMapRef:
+                name: db-config
+            - secretRef:
+                name: db-secret
+          env:
+            - name: DB_SERVICE_NAME
+              value: db-service
+      containers:
+        - name: cos-promo-service-test
+          image: cos-promo-service:latest
+          imagePullPolicy: Never
+          env:
+            - name: PRODUCT_CATALOGUE_SERVICE_NAME
+              value: product-catalogue-service-service
+            - name: ORDER_SERVICE_NAME
+              value: order-service-service
+            - name: PROMO_SERVICE_NAME
+              value: promo-service-service
+            - name: DB_SERVICE_NAME
+              value: db-service
+
+          ports:
+            - containerPort: 3003

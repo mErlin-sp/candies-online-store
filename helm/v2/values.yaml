@@ -1,0 +1,86 @@
+clientDeployment:
+  cosClientTest:
+    image:
+      repository: cos-client
+      tag: latest
+    imagePullPolicy: Never
+  replicas: 1
+clientService:
+  ports:
+    - port: 3000
+      targetPort: 3000
+  type: ClusterIP
+dbConfig:
+  mysqlDatabase: db
+dbDeployment:
+  cosDbTest:
+    image:
+      repository: cos-db
+      tag: latest
+    imagePullPolicy: Never
+  replicas: 1
+dbSecret:
+  mysqlPassword: db_user
+  mysqlRootPassword: db_root
+  mysqlUser: db_user
+dbService:
+  ports:
+    - port: 3306
+      protocol: TCP
+      targetPort: 3306
+  type: ClusterIP
+productCatalogueServiceDeployment:
+  cosProductCatalogueServiceMigrationsRun:
+    image:
+      repository: cos-product-catalogue-service-migrations
+      tag: latest
+    imagePullPolicy: Never
+  cosProductCatalogueServiceTest:
+    image:
+      repository: cos-product-catalogue-service
+      tag: latest
+    imagePullPolicy: Never
+  replicas: 1
+productCatalogueServiceService:
+  ports:
+    - port: 3001
+      targetPort: 3001
+  type: ClusterIP
+kubernetesClusterDomain: cluster.local
+promoServiceDeployment:
+  cosPromoServiceMigrationsRun:
+    image:
+      repository: cos-promo-service-migrations
+      tag: latest
+    imagePullPolicy: Never
+  cosPromoServiceTest:
+    image:
+      repository: cos-promo-service
+      tag: latest
+    imagePullPolicy: Never
+  replicas: 1
+promoServiceService:
+  ports:
+    - port: 3003
+      targetPort: 3003
+  type: ClusterIP
+orderServiceDeployment:
+  cosOrderServiceMigrationsRun:
+    image:
+      repository: cos-order-service-migrations
+      tag: latest
+    imagePullPolicy: Never
+  cosOrderServiceTest:
+    image:
+      repository: cos-order-service
+      tag: latest
+    imagePullPolicy: Never
+  replicas: 1
+orderServiceService:
+  ports:
+    - port: 3002
+      targetPort: 3002
+  type: ClusterIP
+pvc:
+  dbPvc:
+    storageRequest: 5Gi
