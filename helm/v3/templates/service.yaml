@@ -1,0 +1,28 @@
+{{- $defaults := . -}}
+
+{{- range $index, $value := .Values.microservices }}
+{{- if $value.service }}
+{{- $_ := set $value "nameOverride" $index }}
+{{- $microservice := dict "Values" $value }}
+{{- $defaultsCopy := $defaults | deepCopy }}
+{{- with mergeOverwrite $defaultsCopy $microservice }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "v2.fullname" . }}-service
+  labels:
+    {{- include "v2.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+  {{- range $value.service.ports }}
+    - port: {{ .port }}
+      targetPort: {{ .name }}
+  {{- end }}
+  selector:
+    app: {{ include "v2.fullname" . }}
+    {{- include "v2.selectorLabels" . | nindent 4 }}
+{{ end }}
+{{ end }}
+{{ end }}

@@ -1,0 +1,77 @@
+microservices:
+  client:
+    replicas: 1
+    container:
+      name: cos-client-test
+    image:
+      name: cos-client
+      tag: latest
+    service:
+      ports:
+        - name: 3000
+          containerPort: 3000
+          port: 3000
+    ingress:
+      path: /
+      port: 3000
+
+  product-catalogue-service:
+    replicas: 1
+    container:
+      name: cos-product-catalogue-service-test
+    image:
+      name: cos-product-catalogue-service
+      tag: latest
+    service:
+      ports:
+        - name: 3001
+          containerPort: 3001
+          port: 3001
+    ingress:
+      path: /api/product-catalog-service
+      port: 3001
+
+    order-service:
+      replicas: 1
+      container:
+        name: cos-order-service-test
+      image:
+        name: cos-order-service
+        tag: latest
+      service:
+        ports:
+          - name: 3002
+            containerPort: 3002
+            port: 3002
+      ingress:
+        path: /api/order-service
+        port: 3002
+
+    promo-service:
+      replicas: 1
+      container:
+        name: cos-promo-service-test
+      image:
+        name: cos-promo-service
+        tag: latest
+      service:
+        ports:
+          - name: 3003
+            containerPort: 3003
+            port: 3003
+      ingress:
+        path: /api/promo-service
+        port: 3003
+
+    db:
+      replicas: 1
+      container:
+        name: cos-db-test
+      image:
+        name: cos-db
+        tag: latest
+      service:
+        ports:
+          - name: 3306
+            containerPort: 3306
+            port: 3306

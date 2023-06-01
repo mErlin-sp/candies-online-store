@@ -1,0 +1,29 @@
+{{- $defaults := . -}}
+
+{{- range $index, $value := .Values.microservices }}
+{{- if $value.service }}
+{{- $_ := set $value "nameOverride" $index }}
+{{- $microservice := dict "Values" $value }}
+{{- $defaultsCopy := $defaults | deepCopy }}
+{{- with mergeOverwrite $defaultsCopy $microservice }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "v2.fullname" . }}-ingress
+  labels:
+ {{- include "v2.labels" . | nindent 4 }}
+spec:
+  rules:
+    - http:
+        paths:
+          - backend:
+              service:
+                name: {{ include "v2.fullname" . }}-service
+                port:
+                  number: {{ $value.ingress.port }}
+            path: {{ $value.ingress.path }}
+            pathType: 'Prefix'
+{{ end }}
+{{ end }}
+{{ end }}
